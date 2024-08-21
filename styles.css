@@ -24,11 +24,11 @@ body {
   height: 300px;
   width: 100vw;
   background: rgba(0, 0, 0, 0.4);
-  z-index: -1;
 }
 
 h1 {
   margin: 0;
+  z-index:1;
 }
 
 .phrase {
