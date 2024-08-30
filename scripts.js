@@ -10,7 +10,33 @@ const weekDays = [
   "Sábado",
 ];
 
+const months = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+
 function setDay(date) {
+  const workDate = getWorkDateOrException(date);
+
+  let string =
+    date.getDate() == workDate.getDate() ? "Hoje" : weekDays[workDate.getDay()];
+  document.getElementById("day").textContent = string;
+  document.getElementById("date").textContent = `${workDate.getDate()}/${
+    workDate.getMonth() + 1
+  }/${workDate.getFullYear()}`;
+}
+
+function getWorkDateOrException(date) {
   const today = date;
   let workDay = getWorkDay(today);
   let workDate = getDayOfWeek(today, workDay);
@@ -27,12 +53,7 @@ function setDay(date) {
     workDay = exception.getDay();
   }
 
-  let string =
-    date.getDate() == workDate.getDate() ? "Hoje" : weekDays[workDay];
-  document.getElementById("day").textContent = string;
-  document.getElementById("date").textContent = `${workDate.getDate()}/${
-    workDate.getMonth() + 1
-  }/${workDate.getFullYear()}`;
+  return workDate;
 }
 
 function getWorkDay(date) {
@@ -84,4 +105,81 @@ function getWeekDates(date = new Date()) {
   return weekDates;
 }
 
+function createCalendar(date = new Date()) {
+  const container = document.getElementById("calendars");
+  const currentMonth = date.getMonth();
+  const currentYear = date.getFullYear();
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+
+  const calendarContainer = document.createElement("div");
+  calendarContainer.className = "calendar-container";
+  container.appendChild(calendarContainer);
+
+  const calendarTitle = document.createElement("h2");
+  calendarTitle.className = "calendar-title";
+  calendarTitle.textContent = `${months[currentMonth]} ${currentYear}`;
+  calendarContainer.appendChild(calendarTitle);
+
+  const calendarDiv = document.createElement("div");
+  calendarDiv.className = "calendar";
+  calendarContainer.appendChild(calendarDiv);
+
+  for (const day of weekDays) {
+    const headerDiv = document.createElement("div");
+    headerDiv.className = "calendar-header";
+    headerDiv.textContent = day[0];
+    calendarDiv.appendChild(headerDiv);
+  }
+
+  let currentDate = firstDayOfMonth;
+
+  for (let i = 0; i < firstDayOfMonth.getDay(); i++) {
+    const emptyDiv = document.createElement("div");
+    calendarDiv.appendChild(emptyDiv);
+  }
+
+  const officeDates = {};
+
+  while (currentDate <= lastDayOfMonth) {
+    const dayDiv = document.createElement("div");
+    dayDiv.textContent = currentDate.getDate();
+    dayDiv.className = "";
+
+    if (new Date().toDateString() === currentDate.toDateString()) {
+      dayDiv.className += " is-today";
+    }
+
+    const sundayOfWeek = new Date(
+      new Date(currentDate).setDate(
+        currentDate.getDate() - currentDate.getDay()
+      )
+    ).toDateString();
+    let officeDate = officeDates[sundayOfWeek];
+
+    if (!officeDate) {
+      officeDates[sundayOfWeek] = getWorkDateOrException(
+        new Date(sundayOfWeek)
+      );
+      officeDate = officeDates[sundayOfWeek];
+    }
+
+    if (officeDate.toDateString() === currentDate.toDateString()) {
+      dayDiv.className += " is-office";
+    }
+
+    calendarDiv.appendChild(dayDiv);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+}
+
+function createCalendars(firstMonth = new Date()) {
+  for (let i = 0; i < 3; i++) {
+    createCalendar(
+      new Date(firstMonth.getFullYear(), firstMonth.getMonth() + i)
+    );
+  }
+}
+
 window.onload = setDay(new Date());
+window.onload = createCalendars();
