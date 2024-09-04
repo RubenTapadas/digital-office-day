@@ -38,8 +38,9 @@ function setDay(date) {
 
 function getWorkDateOrException(date) {
   const today = date;
+  const dateException = getException(date, exceptions);
   let workDay = getWorkDay(today);
-  let workDate = getDayOfWeek(today, workDay);
+  let workDate = dateException ?? getDayOfWeek(today, workDay);
 
   if (workDate.getTime() < today.getTime()) {
     const nextWeekDate = new Date(new Date(today).setDate(today.getDate() + 7));
@@ -58,7 +59,6 @@ function getWorkDateOrException(date) {
 
 function getWorkDay(date) {
   const weekDates = getWeekDates(date);
-
   const workDay = isFirstMonthOfQuarter(weekDates[2]) ? 4 : 2;
 
   return workDay;
