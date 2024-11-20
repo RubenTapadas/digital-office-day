@@ -1,4 +1,4 @@
-const exceptions = ["2024-9-6", "2024-9-30"];
+const exceptions = ["2024-9-6", "2024-9-30", "2024-12-18"];
 
 const weekDays = [
   "Domingo",
