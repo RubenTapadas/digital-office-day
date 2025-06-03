@@ -1,4 +1,20 @@
-const exceptions = ["2024-9-6", "2024-9-30", "2024-12-13", "2024-12-18", "2025-2-19", "2025-2-26", "2025-3-5", "2025-3-14", "2025-3-19", "2025-3-26", "2025-4-2", "2025-4-9", "2025-4-16", "2025-4-23", "2025-4-30"];
+const exceptions = [
+  "2024-9-6",
+  "2024-9-30",
+  "2024-12-13",
+  "2024-12-18",
+  "2025-2-19",
+  "2025-2-26",
+  "2025-3-5",
+  "2025-3-14",
+  "2025-3-19",
+  "2025-3-26",
+  "2025-4-2",
+  "2025-4-9",
+  "2025-4-16",
+  "2025-4-23",
+  "2025-4-30",
+];
 
 const weekDays = [
   "Domingo",
@@ -24,6 +40,13 @@ const months = [
   "Novembro",
   "Dezembro",
 ];
+
+const monthWeekDay = {
+  "2020-01-01": [4, 2, 2, 4, 2, 2, 4, 2, 2, 4, 2, 2],
+  "2025-06-01": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+};
+
+const referenceDay = 2;
 
 function setDay(date) {
   const workDate = getWorkDateOrException(date);
@@ -59,7 +82,11 @@ function getWorkDateOrException(date) {
 
 function getWorkDay(date) {
   const weekDates = getWeekDates(date);
-  const workDay = isFirstMonthOfQuarter(weekDates[2]) ? 4 : 2;
+  const referenceDate = weekDates[referenceDay];
+  const currMonthWeekDay = Object.entries(monthWeekDay)
+    .reverse()
+    .find(([key, _]) => new Date(referenceDate) >= new Date(key))[1];
+  const workDay = currMonthWeekDay[referenceDate.getMonth()];
 
   return workDay;
 }
@@ -69,11 +96,6 @@ function getDayOfWeek(date, targetDay) {
   targetDate.setDate(targetDate.getDate() - targetDate.getDay() + targetDay);
 
   return targetDate;
-}
-
-function isFirstMonthOfQuarter(date) {
-  const month = date.getMonth();
-  return month % 3 === 0;
 }
 
 function getException(date, exceptions) {
