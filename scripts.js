@@ -14,6 +14,7 @@ const exceptions = [
   "2025-4-16",
   "2025-4-23",
   "2025-4-30",
+  "2025-10-15",
 ];
 
 const weekDays = [
@@ -205,3 +206,4 @@ function createCalendars(firstMonth = new Date()) {
 
 window.onload = setDay(new Date());
 window.onload = createCalendars();
+
