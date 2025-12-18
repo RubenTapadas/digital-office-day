@@ -15,6 +15,18 @@ const rawExceptions = [
   "2025-4-23",
   "2025-4-30",
 ];
+
+/* [
+    {
+      local: "lisboa",
+      dates: ["2026-1-29", "2026-1-30"],
+    },
+    {
+      local: "porto",
+      dates: ["2025-5-29", "2025-5-31"],
+    },
+], */
+
 const exceptions = new Set(
   rawExceptions.flatMap((ex) => (Array.isArray(ex) ? ex : [ex]))
 );
@@ -47,10 +59,55 @@ const months = [
 const monthWeekDay = {
   "2020-01-01": [4, 2, 2, 4, 2, 2, 4, 2, 2, 4, 2, 2],
   "2025-06-01": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-  "2026-01-01": [[3,4], [3,4], [3,4], [3,4], [3,4], [3,4], [3,4], [3,4], [3,4], [3,4], [3,4], [3,4]],
+  "2026-01-01": [
+    {
+      local: "lisboa",
+      days: [
+        [3, 4],
+        [3, 4],
+        [3, 4],
+        [3, 4],
+        [3, 4],
+        [3, 4],
+        [3, 4],
+        [3, 4],
+        [3, 4],
+        [3, 4],
+        [3, 4],
+        [3, 4],
+      ],
+    },
+    {
+      local: "porto",
+      days: [
+        [2, 4],
+        [2, 4],
+        [2, 4],
+        [2, 4],
+        [2, 4],
+        [2, 4],
+        [2, 4],
+        [2, 4],
+        [2, 4],
+        [2, 4],
+        [2, 4],
+        [2, 4],
+      ],
+    },
+  ],
 };
 
 const referenceDay = 2;
+let selectedLocation = localStorage.getItem("location") || "lisboa";
+
+function getSelectedLocation() {
+  return selectedLocation;
+}
+
+function setSelectedLocation(location) {
+  selectedLocation = location;
+  localStorage.setItem("location", location);
+}
 
 function setDay(date) {
   const workDate = getWorkDateOrException(date);
@@ -65,6 +122,8 @@ function setDay(date) {
 
 function getWorkDateOrException(date) {
   const today = new Date(date);
+  today.setHours(0, 0, 0, 0);
+
   // Prefer explicit exception in the same week on or after today
   const weekException = getException(today, today);
   if (weekException) {
@@ -100,10 +159,27 @@ function getWorkDateOrException(date) {
 function getWorkDay(date) {
   const weekDates = getWeekDates(date);
   const referenceDate = weekDates[referenceDay];
-  const currMonthWeekDay = Object.entries(monthWeekDay)
+  const currMonthWeekDayEntry = Object.entries(monthWeekDay)
     .reverse()
     .find(([key]) => referenceDate >= new Date(key))[1];
-  return currMonthWeekDay[referenceDate.getMonth()];
+
+  const location = getSelectedLocation();
+
+  if (
+    Array.isArray(currMonthWeekDayEntry) &&
+    currMonthWeekDayEntry.length > 0 &&
+    currMonthWeekDayEntry[0].local
+  ) {
+    const locationEntry = currMonthWeekDayEntry.find(
+      (entry) => entry.local === location
+    );
+    if (locationEntry) {
+      return locationEntry.days[referenceDate.getMonth()];
+    }
+    return currMonthWeekDayEntry[0].days[referenceDate.getMonth()];
+  }
+
+  return currMonthWeekDayEntry[referenceDate.getMonth()];
 }
 
 function getDayOfWeek(date, targetDay) {
@@ -114,12 +190,39 @@ function getDayOfWeek(date, targetDay) {
 
 function getException(date, onOrAfter) {
   const weekDates = getWeekDates(date);
+  const location = getSelectedLocation();
   const matches = [];
-  for (const value of weekDates) {
-    const v = new Date(value);
-    const stringDate = `${v.getFullYear()}-${v.getMonth() + 1}-${v.getDate()}`;
-    if (exceptions.has(stringDate)) matches.push(v);
+
+  for (const ex of rawExceptions) {
+    // Handle locations
+    if (Array.isArray(ex)) {
+      const locationExceptions = ex.find((item) => item.local === location);
+      if (locationExceptions) {
+        for (const dateStr of locationExceptions.dates) {
+          const parts = dateStr.split("-").map(Number);
+          const exDate = new Date(parts[0], parts[1] - 1, parts[2]);
+          if (
+            getWeekDates(exDate)[0].toDateString() ===
+            weekDates[0].toDateString()
+          ) {
+            matches.push(exDate);
+          }
+        }
+      }
+    } else if (typeof ex === "string") {
+      // Handle string dates
+      const parts = ex.split("-").map(Number);
+      if (parts.length >= 3) {
+        const exDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        if (
+          getWeekDates(exDate)[0].toDateString() === weekDates[0].toDateString()
+        ) {
+          matches.push(exDate);
+        }
+      }
+    }
   }
+
   if (matches.length === 0) return undefined;
   if (onOrAfter) {
     const baseline = new Date(onOrAfter);
@@ -148,16 +251,34 @@ function getWorkDatesForWeek(date = new Date()) {
   const workDay = getWorkDay(date);
   // Collect exceptions in the week
   const weekStart = weekDates[0].toDateString();
+  const location = getSelectedLocation();
   const weekExceptions = [];
-  exceptions.forEach((ex) => {
-    const parts = String(ex).split("-").map(Number);
-    if (parts.length < 3 || parts.some((n) => Number.isNaN(n))) return;
-    const [y, m, day] = parts;
-    const exDate = new Date(y, m - 1, day);
-    if (getWeekDates(exDate)[0].toDateString() === weekStart) {
-      weekExceptions.push(exDate);
+
+  for (const ex of rawExceptions) {
+    // Handle locations
+    if (Array.isArray(ex)) {
+      const locationExceptions = ex.find((item) => item.local === location);
+      if (locationExceptions) {
+        for (const dateStr of locationExceptions.dates) {
+          const parts = dateStr.split("-").map(Number);
+          const exDate = new Date(parts[0], parts[1] - 1, parts[2]);
+          if (getWeekDates(exDate)[0].toDateString() === weekStart) {
+            weekExceptions.push(exDate);
+          }
+        }
+      }
+    } else if (typeof ex === "string") {
+      // Handle string dates
+      const parts = ex.split("-").map(Number);
+      if (parts.length >= 3) {
+        const exDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        if (getWeekDates(exDate)[0].toDateString() === weekStart) {
+          weekExceptions.push(exDate);
+        }
+      }
     }
-  });
+  }
+
   if (weekExceptions.length > 0) {
     return weekExceptions.sort((a, b) => a.getTime() - b.getTime());
   }
@@ -239,9 +360,18 @@ function createCalendars(firstMonth = new Date()) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  const citySelect = document.getElementById("city");
+
+  citySelect.value = selectedLocation;
+
+  citySelect.addEventListener("change", (e) => {
+    setSelectedLocation(e.target.value);
+    setDay(new Date());
+    const container = document.getElementById("calendars");
+    container.innerHTML = "";
+    createCalendars();
+  });
+
   setDay(new Date());
   createCalendars();
 });
-
-
-

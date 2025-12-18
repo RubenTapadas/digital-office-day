@@ -12,6 +12,28 @@ body {
   flex-direction: row-reverse;
 }
 
+select {
+  background: rgba(255, 255, 255, 0.1);
+  border: 0;
+  color: #fff;
+  padding: 5px 4px 2px 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  outline: 0;
+  font-size: 1.5rem;
+  font-family: "Bebas Neue", sans-serif;
+  border-right: 7px solid transparent;
+  font-weight: bold;
+}
+
+option {
+  background: #082642f7;
+}
+
+option:active {
+  background: #135898f7;
+}
+
 .container {
   color: rgba(255, 255, 255, 0.9);
   width: 100%;
@@ -32,9 +54,25 @@ body {
   margin-bottom: 12px;
 }
 
-h1 {
+h1,
+.location {
   margin: 0;
   z-index: 1;
+  font-weight: bold;
+}
+
+.location {
+  z-index: 1;
+  padding-right: 100px;
+  padding-bottom: 10px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.location select {
+  margin-top: -3px;
 }
 
 .phrase {
@@ -127,7 +165,8 @@ h1 {
   }
 
   .phrase,
-  .date {
+  .date,
+  .location {
     padding-right: 0;
     text-align: center;
   }
