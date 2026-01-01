@@ -111,6 +111,7 @@ function setSelectedLocation(location) {
 
 function setDay(date) {
   const workDate = getWorkDateOrException(date);
+  console.log({ workDate });
   const isToday = date.toDateString() === workDate.toDateString();
   document.getElementById("day").textContent = isToday
     ? "Hoje"
@@ -142,7 +143,8 @@ function getWorkDateOrException(date) {
   };
   let workDate = computeForWeek(today);
   if (!workDate || workDate.getTime() < today.getTime()) {
-    const nextWeekBase = new Date(today);
+    const weekStart = getWeekDates(today)[0];
+    const nextWeekBase = new Date(weekStart);
     nextWeekBase.setDate(nextWeekBase.getDate() + 7);
     workDate = computeForWeek(nextWeekBase);
   }
